@@ -7,17 +7,32 @@ use Illuminate\Support\ServiceProvider;
 
 class CypressServiceProvider extends ServiceProvider
 {
+    /**
+     * Register any application services.
+     *
+     * @return void
+     */
+    public function register()
+    {
+        if (! app()->configurationIsCached()) {
+            $this->mergeConfigFrom(__DIR__ . '/../config/cypress.php', 'cypress');
+        }
+    }
+
+    /**
+     * Bootstrap any application services.
+     *
+     * @return void
+     */
     public function boot()
     {
-        $this->mergeConfigFrom(
-            __DIR__.'/../config/cypress.php', 'cypress'
-        );
-
         $excludedEnvironments = config('cypress.exclude');
+
         if (is_string($excludedEnvironments)) {
             $excludedEnvironments = explode(',', $excludedEnvironments);
         }
         $excludedEnvironments[] = 'production';
+        $excludedEnvironments = array_unique($excludedEnvironments);
 
         if ($this->app->environment($excludedEnvironments)) {
             return;
@@ -36,6 +51,11 @@ class CypressServiceProvider extends ServiceProvider
         }
     }
 
+    /**
+     * Add the Cypress routes.
+     *
+     * @return void
+     */
     protected function addRoutes()
     {
         Route::namespace('')
